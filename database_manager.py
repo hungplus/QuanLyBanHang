@@ -48,6 +48,7 @@ class DatabaseManager:
             npp_mau = [("Đại lý Unilever", "Anh Hùng", "0901.123.456", 1)]
             self.cursor.executemany("INSERT INTO Nha_Phan_Phoi (ten_npp, ten_sale, sdt_sale, trang_thai) VALUES (?, ?, ?, ?)", npp_mau)
             self.conn.commit()
+
     # ==========================================
     # CÁC HÀM LẤY DỮ LIỆU (SELECT)
     # ==========================================
@@ -127,7 +128,7 @@ class DatabaseManager:
     # ==========================================
     # CÁC HÀM XỬ LÝ NGHIỆP VỤ PHỨC TẠP (CÓ TRANSACTION)
     # ==========================================
-    def nghiep_vu_nhap_kho(self, ten_npp, ten_sale, ten_sp, tong_so_luong, gia_von):
+    def nghiep_vu_nhap_kho(self, ten_npp, ten_sale, ten_sp, tong_so_luong, gia_von, ma_vach="", gia_ban=0.0):
         """Xử lý nhập hàng: Kiểm tra, cập nhật tồn kho và lưu lịch sử"""
         try:
             self.cursor.execute("BEGIN TRANSACTION;")
@@ -138,14 +139,25 @@ class DatabaseManager:
             id_npp = id_npp_row[0] if id_npp_row else None
 
             # 2. Xử lý Sản phẩm (Cập nhật hoặc Thêm mới)
-            self.cursor.execute("SELECT id FROM San_Pham WHERE ten_sp = ?", (ten_sp,))
+            self.cursor.execute("SELECT id, ton_kho FROM San_Pham WHERE ten_sp = ?", (ten_sp,))
             sp_row = self.cursor.fetchone()
             
             if sp_row:
                 id_sp = sp_row[0]
-                self.cursor.execute("UPDATE San_Pham SET ton_kho = ton_kho + ?, id_npp = ? WHERE id = ?", (tong_so_luong, id_npp, id_sp))
+                ton_moi = sp_row[1] + tong_so_luong
+                
+                # Cập nhật tồn kho, đè mã vạch và giá bán mới nhất vào CSDL
+                self.cursor.execute("""
+                    UPDATE San_Pham 
+                    SET ton_kho = ?, ma_vach = ?, gia_ban = ?, id_npp = ? 
+                    WHERE id = ?
+                """, (ton_moi, ma_vach, gia_ban, id_npp, id_sp))
             else:
-                self.cursor.execute("INSERT INTO San_Pham (ten_sp, ton_kho, id_npp) VALUES (?, ?, ?)", (ten_sp, tong_so_luong, id_npp))
+                # Thêm sản phẩm mới hoàn toàn
+                self.cursor.execute("""
+                    INSERT INTO San_Pham (ten_sp, ton_kho, id_npp, ma_vach, gia_ban) 
+                    VALUES (?, ?, ?, ?, ?)
+                """, (ten_sp, tong_so_luong, id_npp, ma_vach, gia_ban))
                 id_sp = self.cursor.lastrowid
 
             # 3. Lưu lịch sử nhập
