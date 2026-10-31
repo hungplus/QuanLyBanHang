@@ -10,27 +10,45 @@ class TabCanhBao(QWidget):
     def setup_ui(self):
         layout = QVBoxLayout()
         top_layout = QHBoxLayout()
+        
         lbl_tieu_de = QLabel("⚠️ DANH SÁCH MẶT HÀNG SẮP HẾT CẦN GỌI NHẬP THÊM")
-        lbl_tieu_de.setStyleSheet("font-size: 22px; font-weight: bold; color: #c0392b;")
+        # Phóng to tiêu đề lên 28px
+        lbl_tieu_de.setStyleSheet("font-size: 28px; font-weight: bold; color: #c0392b;")
         
         btn_copy_ds = QPushButton("📋 Copy danh sách")
-        btn_copy_ds.setStyleSheet("QPushButton {font-size: 16px; font-weight: bold; background-color: #3498db; color: white; padding: 8px 16px; border-radius: 5px;}")
+        # Phóng to nút bấm lên 22px, bo góc và đệm rộng hơn
+        btn_copy_ds.setStyleSheet("""
+            QPushButton {font-size: 22px; font-weight: bold; background-color: #3498db; color: white; padding: 12px 20px; border-radius: 6px;}
+            QPushButton:hover {background-color: #2980b9;}
+        """)
         btn_copy_ds.clicked.connect(self.copy_danh_sach)
         
-        top_layout.addWidget(lbl_tieu_de); top_layout.addStretch(); top_layout.addWidget(btn_copy_ds)
+        top_layout.addWidget(lbl_tieu_de)
+        top_layout.addStretch()
+        top_layout.addWidget(btn_copy_ds)
         layout.addLayout(top_layout)
 
         self.bang = QTableWidget(0, 6)
         self.bang.setHorizontalHeaderLabels(["STT", "Tên Sản Phẩm", "Tồn Kho", "Nhà Phân Phối", "Người Liên Hệ", "Số Điện Thoại"])
         self.bang.verticalHeader().setVisible(False)
+        self.bang.verticalHeader().setDefaultSectionSize(55)
         self.bang.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.bang.setStyleSheet("QTableWidget { font-size: 16px; gridline-color: #bdc3c7; outline: 0;} QHeaderView::section { background-color: #34495e; color: white; font-size: 16px; font-weight: bold; padding: 8px;}")
+        
+        # Tăng font chữ header lên 22px, chữ trong bảng lên 24px
+        self.bang.setStyleSheet("""
+            QTableWidget { font-size: 24px; gridline-color: #bdc3c7; outline: 0;} 
+            QHeaderView::section { background-color: #34495e; color: white; font-size: 22px; font-weight: bold; padding: 12px; border: 1px solid #bdc3c7;}
+        """)
         self.bang.setAlternatingRowColors(True)
 
+        # ĐIỀU CHỈNH LẠI KÍCH THƯỚC CÁC CỘT CHO CÂN ĐỐI
         header = self.bang.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        for col in range(2, 6): header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents) # STT bó sát
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)          # Tên SP giãn đều
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents) # Tồn kho bó sát
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)          # NPP giãn đều
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)          # Người liên hệ giãn đều
+        header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)          # SĐT giãn đều
 
         layout.addWidget(self.bang)
         self.setLayout(layout)
@@ -40,8 +58,11 @@ class TabCanhBao(QWidget):
         lbl = QLabel(str(text))
         lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         lbl.setAlignment(Qt.AlignmentFlag.AlignCenter if can_giua else Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        style = "font-size: 16px; padding: 4px 8px; background: transparent;"
-        if mau_do: style += " color: #c0392b; font-weight: bold;"
+        
+        # Phóng to chữ ở các ô dữ liệu (đang dùng QLabel) lên 24px
+        style = "font-size: 24px; padding: 6px 12px; background: transparent;"
+        if mau_do: 
+            style += " color: #c0392b; font-weight: bold;"
         lbl.setStyleSheet(style)
         return lbl
 

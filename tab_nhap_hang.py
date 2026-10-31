@@ -7,19 +7,26 @@ from PyQt6.QtCore import Qt, pyqtSignal, QStringListModel, QTime
 from PyQt6.QtGui import QIntValidator, QFont
 
 # ==============================================================
-# CỬA SỔ POPUP THÊM ĐỐI TÁC (Giữ nguyên)
+# CỬA SỔ POPUP THÊM ĐỐI TÁC
 # ==============================================================
 class PopupThemNPP(QDialog):
     def __init__(self, db_manager, danh_sach_npp_hien_tai, parent=None):
         super().__init__(parent)
         self.db = db_manager
         self.setWindowTitle("Thêm Đối Tác / Nhân Viên Mới")
-        self.setFixedSize(450, 250)
+        
+        # SỬA LỖI: Cấu hình kích thước tối thiểu cho phép kéo giãn
+        self.setMinimumSize(550, 350)
         self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
+        
+        # SỬA LỖI: Dùng đúng hàm setStyleSheet để định dạng chữ cho các nhãn
+        self.setStyleSheet("QLabel { font-size: 20px; font-weight: bold; color: #2c3e50; }")
 
         layout = QVBoxLayout()
         form_layout = QFormLayout()
-        css_input = "font-size: 16px; padding: 6px; border: 1px solid #ccc; border-radius: 4px;"
+        
+        # CẬP NHẬT: Kích thước chữ và khung nhập liệu to như bên tab Quản lý Kho
+        css_input = "font-size: 22px; padding: 10px; border: 2px solid #bdc3c7; border-radius: 6px;"
         
         self.cb_ten_npp = QComboBox()
         self.cb_ten_npp.setEditable(True) 
@@ -44,16 +51,20 @@ class PopupThemNPP(QDialog):
 
         btn_layout = QHBoxLayout()
         
+        # CẬP NHẬT: Nút Hủy và Lưu to hơn, viền bo tròn giống tab Quản lý Kho
+        btn_huy = QPushButton("Hủy")
+        btn_huy.setStyleSheet("""
+            QPushButton {font-size: 22px; font-weight: bold; background-color: #ecf0f1; color: #2c3e50; padding: 12px 20px; border: 2px solid #bdc3c7; border-radius: 6px;}
+            QPushButton:hover {background-color: #bdc3c7;}
+        """)
+        btn_huy.clicked.connect(self.reject)
+        
         btn_luu = QPushButton("💾 LƯU THÔNG TIN")
         btn_luu.setStyleSheet("""
-            QPushButton {font-size: 16px; font-weight: bold; background-color: #2980b9; color: white; padding: 10px; border-radius: 4px;}
-            QPushButton:hover {background-color: #3498db; color: white;}
+            QPushButton {font-size: 22px; font-weight: bold; background-color: #2980b9; color: white; padding: 12px 20px; border: 2px solid #2980b9; border-radius: 6px;}
+            QPushButton:hover {background-color: #3498db; border: 2px solid #3498db;}
         """)
         btn_luu.clicked.connect(self.xu_ly_luu)
-        
-        btn_huy = QPushButton("Hủy")
-        btn_huy.setStyleSheet("font-size: 16px; padding: 10px; border-radius: 4px;")
-        btn_huy.clicked.connect(self.reject)
         
         btn_layout.addWidget(btn_huy)
         btn_layout.addWidget(btn_luu)
@@ -92,7 +103,6 @@ class TabNhapHang(QWidget):
     def setup_ui(self):
         main_layout = QVBoxLayout()
         
-        # Tiêu đề được phóng to lên 28px
         lbl_tieu_de = QLabel("📦 NHẬP HÀNG TỪ TOA")
         lbl_tieu_de.setStyleSheet("font-size: 28px; font-weight: bold; color: #27ae60; margin-bottom: 10px;")
         lbl_tieu_de.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -103,17 +113,14 @@ class TabNhapHang(QWidget):
         form_layout.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
         form_layout.setSpacing(15)
         
-        # Các ô nhập liệu được phóng to lên 22px
         css_input = "font-size: 22px; padding: 10px; border: 1px solid #7f8c8d; border-radius: 4px;"
         lbl_style = "font-size: 22px; font-weight: bold;"
 
-        # --- TÍNH NĂNG MỚI: Quét Mã Vạch ---
         self.txt_ma_vach = QLineEdit()
         self.txt_ma_vach.setStyleSheet(css_input)
         self.txt_ma_vach.setPlaceholderText("Tít mã vạch hoặc gõ mã SKU...")
-        self.txt_ma_vach.returnPressed.connect(self.xu_ly_quet_ma_vach) # Nhấn Enter sẽ tự xử lý
+        self.txt_ma_vach.returnPressed.connect(self.xu_ly_quet_ma_vach)
 
-        # --- Nhà Phân Phối ---
         npp_layout = QHBoxLayout()
         self.txt_npp = QLineEdit()
         self.txt_npp.setStyleSheet(css_input)
@@ -134,7 +141,6 @@ class TabNhapHang(QWidget):
         npp_layout.addWidget(self.txt_npp)
         npp_layout.addWidget(self.btn_them_npp)
 
-        # --- Nhân Viên Sale ---
         self.txt_sale = QLineEdit()
         self.txt_sale.setStyleSheet(css_input)
         
@@ -145,7 +151,6 @@ class TabNhapHang(QWidget):
         self.txt_sale.setCompleter(self.completer_sale)
         self.txt_npp.textChanged.connect(self.cap_nhat_goi_y_sale)
 
-        # --- Tên Sản Phẩm ---
         self.txt_san_pham_nhap = QLineEdit()
         self.txt_san_pham_nhap.setStyleSheet(css_input)
         
@@ -155,7 +160,6 @@ class TabNhapHang(QWidget):
         self.completer_nhap.popup().setStyleSheet("QListView { font-size: 20px; }")
         self.txt_san_pham_nhap.setCompleter(self.completer_nhap)
 
-        # --- Số lượng và Quy cách ---
         sl_layout = QHBoxLayout()
         self.txt_so_luong = QLineEdit()
         self.txt_so_luong.setStyleSheet(css_input)
@@ -182,7 +186,6 @@ class TabNhapHang(QWidget):
         sl_layout.addWidget(self.lbl_tong_nhap)
         sl_layout.addStretch()
 
-        # --- Giá vốn & Giá Bán Lẻ ---
         gia_layout = QHBoxLayout()
         self.txt_gia_von = QLineEdit()
         self.txt_gia_von.setStyleSheet(css_input)
@@ -200,12 +203,11 @@ class TabNhapHang(QWidget):
         gia_layout.addWidget(self.txt_gia_ban)
         gia_layout.addWidget(self.btn_dau_phay)
 
-        # Ráp các dòng vào Form
         form_layout.addRow(QLabel("Mã Vạch (SKU):", styleSheet=lbl_style), self.txt_ma_vach)
         form_layout.addRow(QLabel("Nhà Phân Phối:", styleSheet=lbl_style), npp_layout)
         form_layout.addRow(QLabel("Nhân Viên (Sale):", styleSheet=lbl_style), self.txt_sale)
         form_layout.addRow(QLabel("Tên Sản Phẩm:", styleSheet=lbl_style), self.txt_san_pham_nhap)
-        form_layout.addRow(QLabel("Số Lượng × QC:", styleSheet=lbl_style), sl_layout)
+        form_layout.addRow(QLabel("Số Lượng × Quy Cánh:", styleSheet=lbl_style), sl_layout)
         form_layout.addRow(QLabel("Giá Vốn / Bán Lẻ:", styleSheet=lbl_style), gia_layout)
 
         form_container = QWidget()
@@ -219,7 +221,6 @@ class TabNhapHang(QWidget):
         center_layout.addStretch()
         main_layout.addLayout(center_layout)
 
-        # --- Nút Lưu ---
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
         self.btn_luu_kho = QPushButton("💾 LƯU VÀO KHO")
@@ -229,7 +230,6 @@ class TabNhapHang(QWidget):
         btn_layout.addStretch()
         main_layout.addLayout(btn_layout)
 
-        # KHU VỰC 2: TÍNH NĂNG MỚI - BẢNG LỊCH SỬ TRONG PHIÊN
         lbl_lich_su = QLabel("🕒 LỊCH SỬ NHẬP VỪA XONG")
         lbl_lich_su.setStyleSheet("font-size: 18px; font-weight: bold; color: #34495e; margin-top: 20px;")
         main_layout.addWidget(lbl_lich_su)
@@ -241,12 +241,23 @@ class TabNhapHang(QWidget):
         self.bang_lich_su.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.bang_lich_su.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.bang_lich_su.setStyleSheet("""
-            QTableWidget { font-size: 18px; gridline-color: #bdc3c7;} 
-            QHeaderView::section { background-color: #7f8c8d; color: white; font-size: 18px; font-weight: bold; padding: 6px;}
+            QTableWidget { font-size: 24px; gridline-color: #bdc3c7;} 
+            QHeaderView::section { background-color: #7f8c8d; color: white; font-size: 22px; font-weight: bold; padding: 6px;}
         """)
         self.bang_lich_su.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.bang_lich_su.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        
+        # Cột Tên Sản Phẩm sẽ tự động lấy phần không gian còn dư
         self.bang_lich_su.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        
+        # Ép chiều rộng cho cột Số Lượng to ra (Bạn có thể tăng giảm số 150)
+        self.bang_lich_su.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Interactive)
+        self.bang_lich_su.setColumnWidth(3, 150)
+        
+        # Ép chiều rộng cho cột Giá Vốn to ra (Bạn có thể tăng giảm số 200)
+        self.bang_lich_su.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Interactive)
+        self.bang_lich_su.setColumnWidth(4, 200)
+
         main_layout.addWidget(self.bang_lich_su)
 
         self.setLayout(main_layout)
@@ -293,7 +304,6 @@ class TabNhapHang(QWidget):
         self.lbl_tong_nhap.setText(f"= Tổng: {sl * qc} đơn vị")
 
     def them_dau_phay(self):
-        # Ưu tiên điền dấu phẩy vào ô đang được chọn (focus)
         if self.txt_gia_ban.hasFocus():
             hien_tai = self.txt_gia_ban.text()
             if "," not in hien_tai and "." not in hien_tai:
@@ -305,10 +315,8 @@ class TabNhapHang(QWidget):
             self.txt_gia_von.setFocus()
 
     def xu_ly_quet_ma_vach(self):
-        # Mở rộng trong tương lai: Viết hàm gọi SQL để tìm tên sản phẩm và tự động điền dựa trên mã vạch
         ma_vach = self.txt_ma_vach.text().strip()
         if ma_vach:
-            # Tạm thời chuyển con trỏ sang ô Tên Sản phẩm chờ nhập liệu
             self.txt_san_pham_nhap.setFocus()
 
     def xu_ly_luu_kho(self):
@@ -335,12 +343,9 @@ class TabNhapHang(QWidget):
 
         ten_sale = chuoi_sale.split(" - ")[0].strip()
         
-        # LƯU Ý: Hàm nghiep_vu_nhap_kho trong Database Manager cần được cập nhật để nhận thêm ma_vach và gia_ban
-        # Tạm thời vẫn truyền theo khung cũ nếu hàm cũ chưa được cập nhật:
         thanh_cong, thong_bao = self.db.nghiep_vu_nhap_kho(ten_npp, ten_sale, san_pham, tong_so_luong, gia_von, ma_vach, gia_ban)
         
         if thanh_cong:
-            # Đẩy lên bảng Lịch sử trong phiên
             self.bang_lich_su.insertRow(0)
             self.bang_lich_su.setItem(0, 0, QTableWidgetItem(QTime.currentTime().toString("HH:mm:ss")))
             self.bang_lich_su.setItem(0, 1, QTableWidgetItem(ma_vach))
@@ -348,7 +353,6 @@ class TabNhapHang(QWidget):
             self.bang_lich_su.setItem(0, 3, QTableWidgetItem(str(tong_so_luong)))
             self.bang_lich_su.setItem(0, 4, QTableWidgetItem(str(gia_von)))
 
-            # Xóa trắng form để nhập tiếp
             self.txt_ma_vach.clear()
             self.txt_san_pham_nhap.clear()
             self.txt_so_luong.clear()
